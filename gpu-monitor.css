@@ -1,0 +1,201 @@
+/* ==========================================================
+   GPU monitor widget: CSS translation of the Rainmeter skin
+   ----------------------------------------------------------
+   CSS only handles presentation. Rainmeter [Measure] sections
+   (UsageMonitor, Calc) have no CSS equivalent, so live values
+   are fed in through custom properties, e.g. via JS:
+
+   el.style.setProperty('--value', 42);   // percent, 0 to 100
+
+   Expected markup:
+
+   <div class="widget">
+     <div class="header"><span class="title">GPU</span></div>
+     <div class="body">
+       <div class="metric metric--load">
+         <div class="row"><span class="label">Load</span><span class="value">0 %</span></div>
+         <div class="chart">
+           <div class="graph"></div>
+           <div class="bar"><div class="bar-fill"></div></div>
+         </div>
+       </div>
+       <div class="metric metric--mem"> ... </div>
+       <div class="metric metric--total"> ... </div>
+     </div>
+     <div class="footer"></div>
+   </div>
+   ========================================================== */
+
+/* ---------- [Variables] ---------- */
+:root {
+  --font-name: "Trebuchet MS", sans-serif;
+  --text-size: 8pt;
+  --color-text: rgba(255, 255, 255, 0.804);   /* 255,255,255,205 */
+
+  --color-bar-load:  rgb(255, 242, 0);        /* 255,242,0   */
+  --color-bar-mem:   rgb(141, 198, 63);       /* 141,198,63  */
+  --color-bar-total: rgb(0, 174, 239);        /* 0,174,239   */
+
+  --graph-h: 42px;
+  --widget-w: 180px;
+
+  /* VRAMTotal / SharedTotal, in bytes (reference for JS scaling) */
+  --vram-total: 6442450944;     /* 6 GB  */
+  --shared-total: 12884901888;  /* 12 GB */
+  /* TotalAvailable = vram + shared = 18 GB */
+}
+
+/* ---------- Skin container ---------- */
+.widget {
+  width: var(--widget-w);
+  font-family: var(--font-name);
+  font-size: var(--text-size);
+  color: var(--color-text);
+}
+
+/* ---------- Header / Body / Footer images ---------- */
+.header {
+  position: relative;
+  width: var(--widget-w);
+  height: 50px;
+  background: url("img/Header.png") no-repeat 0 0 / 100% 100%;
+}
+
+.body {
+  width: var(--widget-w);
+  min-height: 190px;
+  background: url("img/Body.png") repeat;   /* Tile=1 */
+}
+
+.footer {
+  width: var(--widget-w);
+  height: 38px;
+  background: url("img/Footer.png") no-repeat 0 0 / 100% 100%;
+}
+
+/* ---------- [styleTitle] ---------- */
+.title {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 15px;
+  height: 20px;
+  text-align: center;
+  text-transform: uppercase;
+  font-size: 12pt;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.157);   /* 0,0,0,40 */
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: clip;                            /* ClipString=1 */
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- [styleLeftText] / [styleRightText] ---------- */
+.row {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 150px;               /* 15px to 165px */
+  height: 14px;
+  margin: 2px 0 2px 15px;
+}
+
+.label,
+.value {
+  font-family: var(--font-name);
+  font-size: var(--text-size);
+  color: var(--color-text);
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.157);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: clip;
+  -webkit-font-smoothing: antialiased;
+}
+
+.label { text-align: left;  text-transform: none; }
+.value { text-align: right; text-transform: none; flex: 1; }
+
+/* ---------- Chart row: graph + vertical bar ---------- */
+.chart {
+  display: flex;
+  align-items: flex-start;
+  gap: 2px;
+  margin: 2px 0 0 15px;
+  height: var(--graph-h);
+}
+
+/* Graphbg.png + Line meter area (W=137, H=42). The line itself
+   needs <canvas> or SVG; CSS only supplies the frame. */
+.graph {
+  position: relative;
+  width: 137px;
+  height: var(--graph-h);
+  background: url("img/Graphbg.png") no-repeat 0 0 / 100% 100%;
+}
+
+.graph::after {
+  content: "";
+  position: absolute;
+  inset: 1px;                                   /* X=1r Y=1r, H = graphH - 2 */
+  background: rgba(0, 0, 0, 0.196);             /* SolidColor=0,0,0,50 */
+  pointer-events: none;
+}
+
+/* CoreBG.png + vertical BAR meter (W=12) */
+.bar {
+  position: relative;
+  width: 12px;
+  height: var(--graph-h);
+  margin-top: -1px;
+  background: url("img/CoreBG.png") no-repeat 0 0 / 100% 100%;
+}
+
+.bar-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;                                    /* BarOrientation=Vertical */
+  height: calc(var(--value, 0) * 1%);           /* --value: 0 to 100 */
+  background-color: var(--bar-color);
+  background-image: var(--bar-image);
+  background-size: 100% var(--graph-h);
+  background-position: bottom;
+  transition: height 1s linear;                 /* Update=1000 */
+}
+
+/* ---------- Per-metric styles ([styleBarLoad], [styleBarMem], [styleBarTotal]) ---------- */
+.metric--load {
+  --bar-color: var(--color-bar-load);
+  --bar-image: url("img/Core2f.png");
+}
+
+.metric--mem {
+  --bar-color: var(--color-bar-mem);
+  --bar-image: url("img/Core1f.png");
+}
+
+.metric--total {
+  --bar-color: var(--color-bar-total);
+  --bar-image: url("img/Core1f.png");
+}
+
+/* Line-graph colour per metric (LineColor), for use by an SVG/canvas line */
+.metric--load  .graph { --line-color: var(--color-bar-load); }
+.metric--mem   .graph { --line-color: var(--color-bar-mem); }
+.metric--total .graph { --line-color: var(--color-bar-total); }
+
+.graph svg,
+.graph canvas {
+  position: absolute;
+  inset: 1px;
+  width: 135px;
+  height: calc(var(--graph-h) - 2px);
+}
+
+.graph path,
+.graph polyline {
+  fill: none;
+  stroke: var(--line-color);
+  stroke-width: 1;
+}
