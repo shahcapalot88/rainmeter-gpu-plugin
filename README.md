@@ -1,2 +1,4 @@
+**NVIDIA GPU Plugin for Rainmeter.**
+
 This is made using the SystemInformer built-in plugin which comes with Rainmeter, which increases compability and works on most devices without having to download msiafterburner.dll or hwinfo.dll , even tho the resources are limited to VRAM and 3D Usage Monitoring.
 If you want to add new sections for different monitoring (eg. FAN RPM, Core Mhz, etc), you have to get either MSIAfterburner.dll or HWInfo.dll and paste it into the plugin directory and update the informer plugin to either of those, and set variables yourself for custom monitoring.
